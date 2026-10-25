@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+        PATH = "C:\\Users\\Asus\\AppData\\Local\\Programs\\Python\\Python312;${env.PATH}"
+    }
     stages {
         stage('Build & Test') {
             steps {

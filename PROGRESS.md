@@ -85,3 +85,12 @@ Final six-task report and evaluator demo commands await remaining verified phase
 - Current Minikube tunnel URL: http://127.0.0.1:63732; background process must stay running.
 
 
+
+### Git release verification - PASS
+Read-only checks on 25 October 2026 confirmed main and release-v1.0 both point to 228e6e789b9611b7fef082072f02fc86488b1b03 locally and on origin. History contains initial commit 6bf7ebf and release commit 228e6e7. v1.0.0-final is an annotated tag (git cat-file -t returned tag), with remote tag object 202de789c5968d9340b9b276ca2069ce18bbdd09 peeling to the release commit. git status reported clean and up to date with origin/main before this tracking update. This PROGRESS.md update is intentionally uncommitted; the user owns all Git writes. Jenkins execution and Jira remain pending.
+
+### Jenkins diagnostic build 1 - partial prerequisite verification
+Read actual saved log at C:\ProgramData\Jenkins\.jenkins\jobs\apstone-simple-pipeline\builds\1\log. whoami returned nt authority\system. git --version returned 2.43.0.windows.1. docker version returned client and server Engine 29.7.2, proving Docker server pipe access for this build's LocalSystem process. where python failed; Python execution was skipped by its conditional. Diagnostic exited 0 intentionally: Finished SUCCESS does not prove Python availability or completion of the required three-stage pipeline. Job name is apstone-simple-pipeline (missing initial c). No Jenkins settings or jobs changed by the agent. Awaiting user choice for a job-local Python path fix before source edits; actual LocalSystem Python access still needs verification.
+
+### Jenkinsfile Python PATH fix - implemented; local verification PASS
+User selected the recommended Jenkinsfile-only fix. Added a pipeline-local environment PATH prepending C:\Users\Asus\AppData\Local\Programs\Python\Python312 while retaining the inherited PATH. Exactly three original stages preserved; no global Jenkins/service/PATH/credential changes. Resolved Python 3.12.2 using that directory plus machine PATH and ran the extracted Build & Test commands via cmd: exit 0, exactly 9 passed (one dependency deprecation warning), required success echo printed. Newly created .ci-venv removed after an absolute-path check; Test-Path False. Actual LocalSystem Python execution and full pipeline remain pending user commit/push and user Jenkins clicks. Existing annotated release tag is unchanged. Evidence: outputs/jenkins-python-path-local-check.log.
