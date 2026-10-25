@@ -1,0 +1,60 @@
+- name: Validate payment gateway configuration and live API
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    app_url: http://localhost:38080
+    ansible_python_interpreter: auto_silent
+    capstone_config: {}
+  tasks:
+    - name: Check generated environment file
+      ansible.builtin.stat:
+        path: "{{ playbook_dir }}/capstone.env"
+      register: env_file
+    - name: Require environment file
+      ansible.builtin.assert:
+        that: env_file.stat.exists
+        fail_msg: capstone.env does not exist. Run Terraform apply first.
+    - name: Read environment file
+      ansible.builtin.slurp:
+        src: "{{ playbook_dir }}/capstone.env"
+      register: env_content
+    - name: Parse KEY=VALUE configuration
+      ansible.builtin.set_fact:
+        capstone_config: "{{ capstone_config | combine({item.split('=', 1)[0]: item.split('=', 1)[1]}) }}"
+      loop: "{{ (env_content.content | b64decode).splitlines() }}"
+      when: "'=' in item"
+    - name: Require a gateway HTTP URL
+      ansible.builtin.assert:
+        that:
+          - capstone_config.PAYMENT_GATEWAY_URL | default('') is match('^https?://[^\s/]+(?:/[^\s]*)?$')
+        fail_msg: PAYMENT_GATEWAY_URL must be a non-empty http(s) URL.
+    - name: Require deployed status
+      ansible.builtin.assert:
+        that: capstone_config.STATUS | default('') == 'DEPLOYED'
+        fail_msg: STATUS must equal DEPLOYED.
+    - name: Check live backend health through gateway
+      ansible.builtin.uri:
+        url: "{{ app_url }}/health"
+        status_code: 200
+        return_content: true
+      register: health
+    - name: Require healthy backend
+      ansible.builtin.assert:
+        that: health.json.status | default('') == 'healthy'
+        fail_msg: Gateway health response must report healthy.
+    - name: Check live payments
+      ansible.builtin.uri:
+        url: "{{ app_url }}/api/payments"
+        status_code: 200
+        return_content: true
+      register: payments
+    - name: Require seeded payments
+      ansible.builtin.assert:
+        that:
+          - payments.json is sequence
+          - payments.json | length > 0
+        fail_msg: Gateway must return a non-empty payments array.
+    - name: Validation summary
+      ansible.builtin.debug:
+        msg: "Validated DEPLOYED configuration, healthy API at {{ app_url }}, and {{ payments.json | length }} payments."

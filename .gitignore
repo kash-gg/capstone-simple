@@ -1,0 +1,9 @@
+capstone.env
+*.tfstate
+*.tfstate.*
+.terraform/
+.venv/
+.ci-venv/
+__pycache__/
+pycache/
+.pytest_cache/

@@ -1,0 +1,18 @@
+services:
+  backend:
+    container_name: capstone-backend
+    image: payment-backend:capstone
+    build: ./backend
+    ports:
+      - "38081:8000"
+  frontend:
+    container_name: capstone-frontend
+    image: payment-frontend:capstone
+    build: ./frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "38080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
